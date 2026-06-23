@@ -24,6 +24,7 @@ body {
 button { font: inherit; }
 
 .phone {
+  --playzone-width: 336px;
   width: min(440px, 100%);
   padding: 24px 28px 28px;
   border: 3px solid #4b5f52;
@@ -33,6 +34,19 @@ button { font: inherit; }
   background: linear-gradient(135deg, #34483d, var(--phone) 48%, #1b2922);
   box-shadow: 0 28px 70px #000a, inset 5px 5px 12px #61726655, inset -8px -8px 15px #0b110ddd;
 }
+
+.phone.expanded-mode {
+  width: min(calc(var(--playzone-width) + 54px), calc(100vw - 24px));
+  max-width: none;
+  padding: 18px 24px 22px;
+  border: 0;
+  border-radius: 18px;
+  background: #18231d;
+  box-shadow: 0 24px 65px #0009;
+}
+
+.expanded-mode .speaker,
+.expanded-mode .brand { display: none; }
 
 .speaker {
   width: 92px;
@@ -57,6 +71,13 @@ button { font: inherit; }
   border-radius: 25px 25px 16px 16px;
   background: #151d19;
   box-shadow: inset 3px 3px 8px #000, 0 2px 0 #63716755;
+}
+
+.expanded-mode .screen-shell {
+  width: min(var(--playzone-width), 100%);
+  margin: 0 auto;
+  padding: 8px;
+  border-radius: 12px;
 }
 
 .screen {
@@ -102,7 +123,7 @@ canvas {
 .overlay h1 { margin: 0; font-size: clamp(28px, 9vw, 46px); letter-spacing: 3px; }
 .overlay p { margin: 10px 0 0; font-size: 15px; font-weight: 700; letter-spacing: 2px; }
 
-.pixel-picker {
+.screen-picker {
   display: grid;
   grid-template-columns: 48px 1fr 48px;
   align-items: center;
@@ -110,7 +131,7 @@ canvas {
   margin: 14px 14px 0;
 }
 
-.pixel-picker div {
+.screen-picker div {
   min-height: 44px;
   display: grid;
   place-content: center;
@@ -120,20 +141,20 @@ canvas {
   box-shadow: inset 0 2px 5px #0009;
 }
 
-.pixel-picker span {
+.screen-picker span {
   color: #8e9b91;
   font-size: 9px;
   letter-spacing: 2px;
 }
 
-.pixel-picker strong {
+.screen-picker strong {
   margin-top: 3px;
   color: #d3dcd5;
   font-size: 12px;
   letter-spacing: 1px;
 }
 
-.pixel-picker button {
+.screen-picker button {
   height: 44px;
   border: 2px solid #0d140f;
   border-radius: 50%;
@@ -145,9 +166,9 @@ canvas {
   cursor: pointer;
 }
 
-.pixel-picker button:disabled { opacity: .35; cursor: not-allowed; }
-.pixel-picker button:not(:disabled):active { transform: translateY(2px); box-shadow: 0 2px 0 #0b100d; }
-.pixel-picker button:focus-visible { outline: 3px solid #c6d18b; outline-offset: 3px; }
+.screen-picker button:disabled { opacity: .35; cursor: not-allowed; }
+.screen-picker button:not(:disabled):active { transform: translateY(2px); box-shadow: 0 2px 0 #0b100d; }
+.screen-picker button:focus-visible { outline: 3px solid #c6d18b; outline-offset: 3px; }
 
 .action-row {
   display: flex;
@@ -192,9 +213,14 @@ canvas {
 
 .help { margin: 17px 0 0; font-size: 10px; letter-spacing: 1px; color: #98a49b; }
 
+.expanded-mode .action-row { max-width: 420px; margin-left: auto; margin-right: auto; }
+.expanded-mode .screen-picker { max-width: 420px; margin-left: auto; margin-right: auto; }
+.expanded-mode .dpad { display: none; }
+
 @media (max-width: 470px) {
   body { padding: 8px; }
   .phone { padding: 18px 18px 20px; border-radius: 42px 42px 30px 30px; }
+  .phone.expanded-mode { padding: 10px; border-radius: 10px; }
   .brand { margin-bottom: 8px; }
   .screen-shell { padding: 9px; }
   .action-row { margin-top: 12px; }

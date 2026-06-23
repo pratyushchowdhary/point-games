@@ -8,16 +8,22 @@
   const overlay = document.querySelector("#overlay");
   const message = document.querySelector("#message");
   const submessage = document.querySelector("#submessage");
-  const pixelLabel = document.querySelector("#pixel-label");
-  const pixelMinus = document.querySelector("#pixel-minus");
-  const pixelPlus = document.querySelector("#pixel-plus");
+  const phone = document.querySelector(".phone");
+  const screenLabel = document.querySelector("#screen-label");
+  const screenMinus = document.querySelector("#screen-minus");
+  const screenPlus = document.querySelector("#screen-plus");
 
-  const PIXEL_SIZES = [
-    { label: "NOKIA ORIGINAL", size: 3 },
-    { label: "BIG", size: 4 },
-    { label: "BIGGER", size: 6 },
-    { label: "BIGGEST", size: 12 }
+  const SCREEN_MODES = [
+    { label: "NOKIA ORIGINAL · 1.5″", width: 84, height: 48 },
+    { label: "CLASSIC PHONE · 3.5″", width: 105, height: 60 },
+    { label: "STANDARD PHONE · 4.7″", width: 126, height: 72 },
+    { label: "PLUS PHONE · 5.5″", width: 147, height: 84 },
+    { label: "MODERN PHONE · 6.1″", width: 168, height: 96 },
+    { label: "LARGE PHONE · 6.7″", width: 189, height: 108 },
+    { label: "LAPTOP · FIT TO SCREEN", dynamic: true }
   ];
+  const SNAKE_PIXEL_SIZE = 3;
+  const DISPLAY_SCALE = 4;
   const START_SPEED = 150;
   const MIN_SPEED = 65;
   const directions = {
@@ -30,9 +36,10 @@
   let direction;
   let queuedDirection;
   let score;
-  let pixelIndex = Math.min(
-    PIXEL_SIZES.length - 1,
-    Math.max(0, Number(localStorage.getItem("snake97-pixel-size") || 0))
+  let touchStart = null;
+  let screenIndex = Math.min(
+    SCREEN_MODES.length - 1,
+    Math.max(0, Number(localStorage.getItem("snake97-screen-size") || 0))
   );
   let timer = null;
   let state = "ready";
@@ -144,7 +151,7 @@
   }
 
   function getPixelSize() {
-    return PIXEL_SIZES[pixelIndex].size;
+    return SNAKE_PIXEL_SIZE;
   }
 
   function getColumns() {
@@ -155,24 +162,45 @@
     return canvas.height / getPixelSize();
   }
 
-  function changePixelSize(delta) {
-    const nextIndex = Math.min(PIXEL_SIZES.length - 1, Math.max(0, pixelIndex + delta));
-    if (nextIndex === pixelIndex) return;
-    pixelIndex = nextIndex;
-    localStorage.setItem("snake97-pixel-size", String(pixelIndex));
-    clearTimeout(timer);
-    state = "ready";
-    updatePixelPicker();
-    reset();
-    message.textContent = PIXEL_SIZES[pixelIndex].label;
-    submessage.textContent = `${getColumns()} × ${getRows()} BLOCKS · PRESS START`;
-    overlay.classList.remove("hidden");
+  function changeScreenSize(delta) {
+    const nextIndex = Math.min(SCREEN_MODES.length - 1, Math.max(0, screenIndex + delta));
+    if (nextIndex === screenIndex) return;
+    screenIndex = nextIndex;
+    localStorage.setItem("snake97-screen-size", String(screenIndex));
+    applyScreenMode(true);
   }
 
-  function updatePixelPicker() {
-    pixelLabel.textContent = PIXEL_SIZES[pixelIndex].label;
-    pixelMinus.disabled = pixelIndex === 0;
-    pixelPlus.disabled = pixelIndex === PIXEL_SIZES.length - 1;
+  function laptopDimensions() {
+    const availableWidth = Math.max(336, window.innerWidth - 48);
+    const availableHeight = Math.max(192, window.innerHeight - 210);
+    const fittedWidth = Math.min(availableWidth, availableHeight * 7 / 4);
+    const units = Math.max(10, Math.floor(fittedWidth / (DISPLAY_SCALE * 21)));
+    return { width: units * 21, height: units * 12 };
+  }
+
+  function applyScreenMode(announce) {
+    const mode = SCREEN_MODES[screenIndex];
+    const dimensions = mode.dynamic ? laptopDimensions() : mode;
+    clearTimeout(timer);
+    state = "ready";
+    canvas.width = dimensions.width;
+    canvas.height = dimensions.height;
+    phone.style.setProperty("--playzone-width", `${dimensions.width * DISPLAY_SCALE}px`);
+    phone.classList.toggle("expanded-mode", screenIndex !== 0);
+    phone.classList.toggle("laptop-mode", Boolean(mode.dynamic));
+    updateScreenPicker();
+    reset();
+    if (announce) {
+      message.textContent = mode.label.split(" · ")[0];
+      submessage.textContent = `${dimensions.width} × ${dimensions.height} PIXELS · PRESS START`;
+      overlay.classList.remove("hidden");
+    }
+  }
+
+  function updateScreenPicker() {
+    screenLabel.textContent = SCREEN_MODES[screenIndex].label;
+    screenMinus.disabled = screenIndex === 0;
+    screenPlus.disabled = screenIndex === SCREEN_MODES.length - 1;
   }
 
   function draw() {
@@ -231,12 +259,34 @@
 
   document.querySelector("#start").addEventListener("click", start);
   document.querySelector("#pause").addEventListener("click", togglePause);
-  pixelMinus.addEventListener("click", () => changePixelSize(-1));
-  pixelPlus.addEventListener("click", () => changePixelSize(1));
+  screenMinus.addEventListener("click", () => changeScreenSize(-1));
+  screenPlus.addEventListener("click", () => changeScreenSize(1));
   document.querySelectorAll("[data-direction]").forEach(button => {
     button.addEventListener("click", () => setDirection(directions[button.dataset.direction]));
   });
 
-  updatePixelPicker();
-  reset();
+  canvas.addEventListener("touchstart", event => {
+    const touch = event.changedTouches[0];
+    touchStart = { x: touch.clientX, y: touch.clientY };
+  }, { passive: true });
+
+  canvas.addEventListener("touchend", event => {
+    if (!touchStart) return;
+    const touch = event.changedTouches[0];
+    const deltaX = touch.clientX - touchStart.x;
+    const deltaY = touch.clientY - touchStart.y;
+    touchStart = null;
+    if (Math.max(Math.abs(deltaX), Math.abs(deltaY)) < 18) return;
+    if (Math.abs(deltaX) > Math.abs(deltaY)) {
+      setDirection(deltaX > 0 ? directions.right : directions.left);
+    } else {
+      setDirection(deltaY > 0 ? directions.down : directions.up);
+    }
+  }, { passive: true });
+
+  window.addEventListener("resize", () => {
+    if (SCREEN_MODES[screenIndex].dynamic) applyScreenMode(false);
+  });
+
+  applyScreenMode(false);
 })();
