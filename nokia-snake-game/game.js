@@ -4,6 +4,7 @@
   const canvas = document.querySelector("#game");
   const ctx = canvas.getContext("2d");
   const scoreEl = document.querySelector("#score");
+  const speedEl = document.querySelector("#speed");
   const highScoreEl = document.querySelector("#high-score");
   const overlay = document.querySelector("#overlay");
   const message = document.querySelector("#message");
@@ -12,6 +13,8 @@
   const screenLabel = document.querySelector("#screen-label");
   const screenMinus = document.querySelector("#screen-minus");
   const screenPlus = document.querySelector("#screen-plus");
+  const originalModeButton = document.querySelector("#mode-original");
+  const modernModeButton = document.querySelector("#mode-modern");
 
   const SCREEN_MODES = [
     { label: "NOKIA ORIGINAL · 1.5″", width: 84, height: 48 },
@@ -25,7 +28,7 @@
   const SNAKE_PIXEL_SIZE = 3;
   const DISPLAY_SCALE = 4;
   const START_SPEED = 150;
-  const MIN_SPEED = 65;
+  const MODERN_START_KMH = 5;
   const directions = {
     up: { x: 0, y: -1 }, down: { x: 0, y: 1 },
     left: { x: -1, y: 0 }, right: { x: 1, y: 0 }
@@ -37,17 +40,31 @@
   let queuedDirection;
   let score;
   let touchStart = null;
+  let gameMode = localStorage.getItem("snake97-game-mode") === "modern" ? "modern" : "original";
   let screenIndex = Math.min(
     SCREEN_MODES.length - 1,
     Math.max(0, Number(localStorage.getItem("snake97-screen-size") || 0))
   );
   let timer = null;
   let state = "ready";
-  let highScore = Number(localStorage.getItem("snake97-high-score") || 0);
+  let highScore = readHighScore();
   highScoreEl.textContent = formatScore(highScore);
 
   function formatScore(value) {
     return String(value).padStart(3, "0");
+  }
+
+  function readHighScore() {
+    const key = gameMode === "modern" ? "snake97-high-score-modern" : "snake97-high-score";
+    return Number(localStorage.getItem(key) || 0);
+  }
+
+  function getSpeedKmh() {
+    return MODERN_START_KMH + score;
+  }
+
+  function updateSpeedDisplay() {
+    speedEl.textContent = gameMode === "modern" ? `${getSpeedKmh()}KM` : "LV1";
   }
 
   function reset() {
@@ -60,6 +77,7 @@
     queuedDirection = directions.right;
     score = 0;
     scoreEl.textContent = "000";
+    updateSpeedDisplay();
     placeFood();
     draw();
   }
@@ -83,19 +101,29 @@
   }
 
   function scheduleTick() {
-    const speed = Math.max(MIN_SPEED, START_SPEED - score * 3);
+    const speed = gameMode === "modern"
+      ? Math.max(55, Math.round(2000 / (5 + getSpeedKmh())))
+      : START_SPEED;
     timer = setTimeout(tick, speed);
   }
 
   function tick() {
     direction = queuedDirection;
-    const head = {
+    let head = {
       x: snake[0].x + direction.x,
       y: snake[0].y + direction.y
     };
+    if (gameMode === "modern") {
+      head = {
+        x: (head.x + getColumns()) % getColumns(),
+        y: (head.y + getRows()) % getRows()
+      };
+    }
     const ate = head.x === food.x && head.y === food.y;
     const bodyToCheck = ate ? snake : snake.slice(0, -1);
-    const hitWall = head.x < 0 || head.x >= getColumns() || head.y < 0 || head.y >= getRows();
+    const hitWall = gameMode === "original" && (
+      head.x < 0 || head.x >= getColumns() || head.y < 0 || head.y >= getRows()
+    );
     const hitSelf = bodyToCheck.some(part => part.x === head.x && part.y === head.y);
 
     if (hitWall || hitSelf) {
@@ -105,8 +133,9 @@
 
     snake.unshift(head);
     if (ate) {
-      score += 10;
+      score += gameMode === "modern" ? 1 : 10;
       scoreEl.textContent = formatScore(score);
+      updateSpeedDisplay();
       placeFood();
       beep(620, 0.045);
     } else {
@@ -121,7 +150,8 @@
     clearTimeout(timer);
     if (score > highScore) {
       highScore = score;
-      localStorage.setItem("snake97-high-score", String(highScore));
+      const key = gameMode === "modern" ? "snake97-high-score-modern" : "snake97-high-score";
+      localStorage.setItem(key, String(highScore));
       highScoreEl.textContent = formatScore(highScore);
     }
     message.textContent = "GAME OVER";
@@ -168,6 +198,28 @@
     screenIndex = nextIndex;
     localStorage.setItem("snake97-screen-size", String(screenIndex));
     applyScreenMode(true);
+  }
+
+  function changeGameMode(nextMode) {
+    if (nextMode === gameMode) return;
+    gameMode = nextMode;
+    localStorage.setItem("snake97-game-mode", gameMode);
+    highScore = readHighScore();
+    highScoreEl.textContent = formatScore(highScore);
+    clearTimeout(timer);
+    state = "ready";
+    updateModePicker();
+    reset();
+    message.textContent = gameMode === "modern" ? "MODERN MODE" : "ORIGINAL MODE";
+    submessage.textContent = gameMode === "modern"
+      ? "WRAP ON · 5 KM/H · PRESS START"
+      : "WALLS ON · LEVEL 1 · PRESS START";
+    overlay.classList.remove("hidden");
+  }
+
+  function updateModePicker() {
+    originalModeButton.setAttribute("aria-pressed", String(gameMode === "original"));
+    modernModeButton.setAttribute("aria-pressed", String(gameMode === "modern"));
   }
 
   function laptopDimensions() {
@@ -261,6 +313,8 @@
   document.querySelector("#pause").addEventListener("click", togglePause);
   screenMinus.addEventListener("click", () => changeScreenSize(-1));
   screenPlus.addEventListener("click", () => changeScreenSize(1));
+  originalModeButton.addEventListener("click", () => changeGameMode("original"));
+  modernModeButton.addEventListener("click", () => changeGameMode("modern"));
   document.querySelectorAll("[data-direction]").forEach(button => {
     button.addEventListener("click", () => setDirection(directions[button.dataset.direction]));
   });
@@ -288,5 +342,6 @@
     if (SCREEN_MODES[screenIndex].dynamic) applyScreenMode(false);
   });
 
+  updateModePicker();
   applyScreenMode(false);
 })();

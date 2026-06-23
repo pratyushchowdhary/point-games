@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#18221b">
   <title>Snake 97</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=modern-mode">
 </head>
 <body>
   <main class="phone" aria-label="Nokia-style Snake game">
@@ -16,6 +16,7 @@
       <div class="screen">
         <header class="hud">
           <span>SCORE <strong id="score">000</strong></span>
+          <span>SPD <strong id="speed">LV1</strong></span>
           <span>HI <strong id="high-score">000</strong></span>
         </header>
         <canvas id="game" width="84" height="48" aria-label="84 by 48 pixel Snake game board"></canvas>
@@ -24,6 +25,11 @@
           <p id="submessage">PRESS START</p>
         </div>
       </div>
+    </section>
+
+    <section class="mode-picker" aria-label="Game mode">
+      <button id="mode-original" type="button" aria-pressed="true">ORIGINAL</button>
+      <button id="mode-modern" type="button" aria-pressed="false">MODERN</button>
     </section>
 
     <section class="screen-picker" aria-label="Playzone screen size">
@@ -50,6 +56,6 @@
 
     <p class="help">ARROW KEYS / WASD · SWIPE · SPACE TO PAUSE</p>
   </main>
-  <script src="game.js"></script>
+  <script src="game.js?v=modern-mode"></script>
 </body>
 </html>

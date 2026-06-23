@@ -96,10 +96,38 @@ button { font: inherit; }
   padding: 0 9px;
   border-bottom: 3px solid var(--lcd-dark);
   color: var(--lcd-dark);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 1px;
 }
+
+.mode-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 14px 14px 0;
+}
+
+.mode-picker button {
+  padding: 9px 12px;
+  border: 2px solid #0d140f;
+  border-radius: 8px;
+  color: #89978d;
+  background: #17221c;
+  box-shadow: inset 0 2px 4px #0009;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  cursor: pointer;
+}
+
+.mode-picker button[aria-pressed="true"] {
+  color: #27351e;
+  background: #a9b77a;
+  box-shadow: 0 3px 0 #0b100d;
+}
+
+.mode-picker button:focus-visible { outline: 3px solid #c6d18b; outline-offset: 3px; }
 
 canvas {
   display: block;
@@ -214,6 +242,7 @@ canvas {
 .help { margin: 17px 0 0; font-size: 10px; letter-spacing: 1px; color: #98a49b; }
 
 .expanded-mode .action-row { max-width: 420px; margin-left: auto; margin-right: auto; }
+.expanded-mode .mode-picker { max-width: 420px; margin-left: auto; margin-right: auto; }
 .expanded-mode .screen-picker { max-width: 420px; margin-left: auto; margin-right: auto; }
 .expanded-mode .dpad { display: none; }
 
