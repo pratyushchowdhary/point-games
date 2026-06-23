@@ -3,44 +3,48 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#18221b">
-  <title>Snake 97</title>
-  <link rel="stylesheet" href="styles.css">
+  <meta name="theme-color" content="#111a15">
+  <title>Point Games</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      margin: 0;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      color: #dce8df;
+      background: radial-gradient(circle at top, #34483d, #0b110d 65%);
+      font-family: "Courier New", monospace;
+    }
+    main { width: min(680px, 100%); text-align: center; }
+    h1 { margin: 0 0 8px; font-size: clamp(38px, 9vw, 72px); letter-spacing: 4px; }
+    p { color: #aebbb1; }
+    a {
+      display: block;
+      margin-top: 36px;
+      padding: 28px;
+      border: 3px solid #72816f;
+      border-radius: 18px;
+      color: #27351e;
+      background: #a9b77a;
+      box-shadow: 8px 8px 0 #000;
+      text-decoration: none;
+      transition: transform .15s;
+    }
+    a:hover, a:focus-visible { transform: translate(-3px, -3px); }
+    strong { display: block; font-size: 28px; }
+    span { display: block; margin-top: 8px; font-size: 14px; }
+  </style>
 </head>
 <body>
-  <main class="phone" aria-label="Nokia-style Snake game">
-    <div class="speaker" aria-hidden="true"></div>
-    <p class="brand">NOKIA</p>
-
-    <section class="screen-shell">
-      <div class="screen">
-        <header class="hud">
-          <span>SCORE <strong id="score">000</strong></span>
-          <span>HI <strong id="high-score">000</strong></span>
-        </header>
-        <canvas id="game" width="320" height="320" aria-label="Snake game board"></canvas>
-        <div class="overlay" id="overlay">
-          <h1 id="message">SNAKE 97</h1>
-          <p id="submessage">PRESS START</p>
-        </div>
-      </div>
-    </section>
-
-    <div class="action-row">
-      <button class="soft-key" id="start" type="button">START</button>
-      <button class="soft-key" id="pause" type="button">PAUSE</button>
-    </div>
-
-    <div class="dpad" aria-label="Direction controls">
-      <button class="up" data-direction="up" aria-label="Move up">▲</button>
-      <button class="left" data-direction="left" aria-label="Move left">◀</button>
-      <div class="center" aria-hidden="true"></div>
-      <button class="right" data-direction="right" aria-label="Move right">▶</button>
-      <button class="down" data-direction="down" aria-label="Move down">▼</button>
-    </div>
-
-    <p class="help">ARROW KEYS / WASD · SPACE TO PAUSE</p>
+  <main>
+    <h1>POINT GAMES</h1>
+    <p>Small games. Straight to the point.</p>
+    <a href="nokia-snake-game/">
+      <strong>NOKIA SNAKE</strong>
+      <span>PLAY NOW →</span>
+    </a>
   </main>
-  <script src="game.js"></script>
 </body>
 </html>
