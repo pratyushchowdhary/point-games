@@ -2,6 +2,8 @@
 
 A dependency-free Nokia-style Snake game built with HTML, CSS, and JavaScript.
 
+The playfield uses the original Nokia 3310's 84 × 48 monochrome resolution. Players can switch the snake block size between Nokia Original, Big, Bigger, and Biggest.
+
 ## Run locally
 
 Open `nokia-snake-game/index.html` in a browser, or run a local server from the repository root:

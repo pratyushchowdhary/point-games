@@ -8,9 +8,16 @@
   const overlay = document.querySelector("#overlay");
   const message = document.querySelector("#message");
   const submessage = document.querySelector("#submessage");
+  const pixelLabel = document.querySelector("#pixel-label");
+  const pixelMinus = document.querySelector("#pixel-minus");
+  const pixelPlus = document.querySelector("#pixel-plus");
 
-  const CELLS = 20;
-  const CELL = canvas.width / CELLS;
+  const PIXEL_SIZES = [
+    { label: "NOKIA ORIGINAL", size: 3 },
+    { label: "BIG", size: 4 },
+    { label: "BIGGER", size: 6 },
+    { label: "BIGGEST", size: 12 }
+  ];
   const START_SPEED = 150;
   const MIN_SPEED = 65;
   const directions = {
@@ -23,6 +30,10 @@
   let direction;
   let queuedDirection;
   let score;
+  let pixelIndex = Math.min(
+    PIXEL_SIZES.length - 1,
+    Math.max(0, Number(localStorage.getItem("snake97-pixel-size") || 0))
+  );
   let timer = null;
   let state = "ready";
   let highScore = Number(localStorage.getItem("snake97-high-score") || 0);
@@ -33,7 +44,11 @@
   }
 
   function reset() {
-    snake = [{ x: 10, y: 10 }, { x: 9, y: 10 }, { x: 8, y: 10 }];
+    const columns = getColumns();
+    const rows = getRows();
+    const startX = Math.floor(columns / 2);
+    const startY = Math.floor(rows / 2);
+    snake = [{ x: startX, y: startY }, { x: startX - 1, y: startY }, { x: startX - 2, y: startY }];
     direction = directions.right;
     queuedDirection = directions.right;
     score = 0;
@@ -44,8 +59,8 @@
 
   function placeFood() {
     const openCells = [];
-    for (let y = 0; y < CELLS; y += 1) {
-      for (let x = 0; x < CELLS; x += 1) {
+    for (let y = 0; y < getRows(); y += 1) {
+      for (let x = 0; x < getColumns(); x += 1) {
         if (!snake.some(part => part.x === x && part.y === y)) openCells.push({ x, y });
       }
     }
@@ -73,7 +88,7 @@
     };
     const ate = head.x === food.x && head.y === food.y;
     const bodyToCheck = ate ? snake : snake.slice(0, -1);
-    const hitWall = head.x < 0 || head.x >= CELLS || head.y < 0 || head.y >= CELLS;
+    const hitWall = head.x < 0 || head.x >= getColumns() || head.y < 0 || head.y >= getRows();
     const hitSelf = bodyToCheck.some(part => part.x === head.x && part.y === head.y);
 
     if (hitWall || hitSelf) {
@@ -128,26 +143,56 @@
     queuedDirection = next;
   }
 
+  function getPixelSize() {
+    return PIXEL_SIZES[pixelIndex].size;
+  }
+
+  function getColumns() {
+    return canvas.width / getPixelSize();
+  }
+
+  function getRows() {
+    return canvas.height / getPixelSize();
+  }
+
+  function changePixelSize(delta) {
+    const nextIndex = Math.min(PIXEL_SIZES.length - 1, Math.max(0, pixelIndex + delta));
+    if (nextIndex === pixelIndex) return;
+    pixelIndex = nextIndex;
+    localStorage.setItem("snake97-pixel-size", String(pixelIndex));
+    clearTimeout(timer);
+    state = "ready";
+    updatePixelPicker();
+    reset();
+    message.textContent = PIXEL_SIZES[pixelIndex].label;
+    submessage.textContent = `${getColumns()} × ${getRows()} BLOCKS · PRESS START`;
+    overlay.classList.remove("hidden");
+  }
+
+  function updatePixelPicker() {
+    pixelLabel.textContent = PIXEL_SIZES[pixelIndex].label;
+    pixelMinus.disabled = pixelIndex === 0;
+    pixelPlus.disabled = pixelIndex === PIXEL_SIZES.length - 1;
+  }
+
   function draw() {
+    const cell = getPixelSize();
     ctx.fillStyle = "#a9b77a";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = "rgba(39, 53, 30, .08)";
-    for (let y = 0; y < CELLS; y += 1) {
-      for (let x = 0; x < CELLS; x += 1) {
-        if ((x + y) % 2 === 0) ctx.fillRect(x * CELL, y * CELL, CELL, CELL);
-      }
-    }
-
     ctx.fillStyle = "#27351e";
     snake.forEach((part, index) => {
-      const inset = index === 0 ? 1 : 2;
-      ctx.fillRect(part.x * CELL + inset, part.y * CELL + inset, CELL - inset * 2, CELL - inset * 2);
+      const inset = cell >= 6 ? 1 : 0;
+      ctx.fillRect(part.x * cell + inset, part.y * cell + inset, cell - inset * 2, cell - inset * 2);
+      if (index === 0 && cell >= 4) {
+        ctx.fillStyle = "#a9b77a";
+        ctx.fillRect(part.x * cell + cell - 2, part.y * cell + 1, 1, 1);
+        ctx.fillStyle = "#27351e";
+      }
     });
 
-    ctx.fillRect(food.x * CELL + 3, food.y * CELL + 3, CELL - 6, CELL - 6);
-    ctx.fillStyle = "#a9b77a";
-    ctx.fillRect(food.x * CELL + 6, food.y * CELL + 6, 3, 3);
+    const foodInset = cell >= 6 ? 1 : 0;
+    ctx.fillRect(food.x * cell + foodInset, food.y * cell + foodInset, cell - foodInset * 2, cell - foodInset * 2);
   }
 
   function beep(frequency, duration) {
@@ -186,9 +231,12 @@
 
   document.querySelector("#start").addEventListener("click", start);
   document.querySelector("#pause").addEventListener("click", togglePause);
+  pixelMinus.addEventListener("click", () => changePixelSize(-1));
+  pixelPlus.addEventListener("click", () => changePixelSize(1));
   document.querySelectorAll("[data-direction]").forEach(button => {
     button.addEventListener("click", () => setDirection(directions[button.dataset.direction]));
   });
 
+  updatePixelPicker();
   reset();
 })();
